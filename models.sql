@@ -24,15 +24,30 @@ CREATE TYPE mood_enum AS ENUM (
   'indifferent', 'nostalgic', 'excited', 'overwhelmed'
 );
 
-CREATE FUNCTION avg_rating_by_genre(g genre_enum)
+CREATE FUNCTION avg_rating_by_genre(g TEXT)
 RETURNS NUMERIC AS $$
+DECLARE
+    genre_val genre_enum;
 BEGIN
+    genre_val := g::genre_enum;
+
     RETURN (
-        SELECT AVG(my_rating::int) 
-        FROM "Book" 
-        WHERE genre = g);
+        SELECT AVG(
+            CASE my_rating
+                WHEN '1' THEN 1
+                WHEN '2' THEN 2
+                WHEN '3' THEN 3
+                WHEN '4' THEN 4
+                WHEN '5' THEN 5
+                ELSE NULL
+            END
+        )
+        FROM "Book"
+        WHERE genre = genre_val
+    );
 END;
 $$ LANGUAGE plpgsql;
+
 
 CREATE TYPE publisher_info AS (
     publisher_name VARCHAR,
@@ -68,4 +83,5 @@ CREATE TABLE "ComicBook" (
 CREATE TABLE "Article" (
     journal VARCHAR,
     DOI VARCHAR 
+
 ) INHERITS ("Readings");
